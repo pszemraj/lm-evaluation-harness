@@ -105,7 +105,9 @@ class HFLM(LM):
             eval_logger.warning(
                 "`pretrained` model kwarg is not of type `str`. Many other model arguments may be ignored. Please do not launch via accelerate or use `parallelize=True` if passing an existing model this way."
             )
-            assert not parallelize, "`parallelize=True` is not compatible with passing pre-initialized model to `pretrained`"
+            assert (
+                not parallelize
+            ), "`parallelize=True` is not compatible with passing pre-initialized model to `pretrained`"
             self._model = pretrained
             self._device = self._model.device
 
@@ -276,13 +278,10 @@ class HFLM(LM):
                             "with 'accelerate launch *script*'. "
                             f"Current run will proceed with {accelerator.num_processes} devices."
                         )
-                    assert (
-                        accelerator.distributed_type
-                        in [
-                            DistributedType.FSDP,
-                            DistributedType.MULTI_GPU,
-                        ]
-                    ), "Unsupported distributed type provided. Only DDP and FSDP are supported."
+                    assert accelerator.distributed_type in [
+                        DistributedType.FSDP,
+                        DistributedType.MULTI_GPU,
+                    ], "Unsupported distributed type provided. Only DDP and FSDP are supported."
                     if accelerator.distributed_type == DistributedType.FSDP:
                         self._model = accelerator.prepare(self.model)
                     else:
@@ -904,6 +903,14 @@ class HFLM(LM):
             # again because vectorizing is annoying
 
             for _, context_enc, continuation_enc in chunk:
+                # debug
+                print("Context Encoded:", context_enc)
+                print("Length of Context Encoded:", len(context_enc))
+                print("Continuation Encoded:", continuation_enc)
+                print("Length of Continuation Encoded:", len(continuation_enc))
+                print("Decoded Context:", self.tok_decode(context_enc))
+                print("Decoded Continuation:", self.tok_decode(continuation_enc))
+
                 # sanity check
                 assert len(context_enc) > 0
                 assert len(continuation_enc) > 0
@@ -1009,7 +1016,9 @@ class HFLM(LM):
                 greedy_tokens = logits.argmax(dim=-1)
                 cont_toks = torch.tensor(
                     cont_toks, dtype=torch.long, device=self.device
-                ).unsqueeze(0)  # [1, seq]
+                ).unsqueeze(
+                    0
+                )  # [1, seq]
                 max_equal = (greedy_tokens == cont_toks).all()
 
                 # Obtain log-probs at the corresponding continuation token indices
