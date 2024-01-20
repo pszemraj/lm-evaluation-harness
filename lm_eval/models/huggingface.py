@@ -903,19 +903,6 @@ class HFLM(LM):
             # again because vectorizing is annoying
 
             for _, context_enc, continuation_enc in chunk:
-                # debug
-                print("Context Encoded:", context_enc)
-                print("Length of Context Encoded:", len(context_enc))
-                print("Continuation Encoded:", continuation_enc)
-                print("Length of Continuation Encoded:", len(continuation_enc))
-                print("Decoded Context:", self.tok_decode(context_enc))
-                print("Decoded Continuation:", self.tok_decode(continuation_enc))
-
-                # sanity check
-                assert len(context_enc) > 0
-                assert len(continuation_enc) > 0
-                assert len(continuation_enc) <= self.max_length
-
                 # how this all works (illustrated on a causal decoder-only setup):
                 #          CTX      CONT
                 # inp    0 1 2 3|4 5 6 7 8 9   <- last token is deleted by inp[:, :-1]
